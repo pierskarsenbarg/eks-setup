@@ -110,3 +110,39 @@ const nodeGroupv130 = new aws.eks.NodeGroup("nodeGroup-v130", {
         version: "v1.30",
     },
 });
+
+const eksPodIdentityAgent = new aws.eks.Addon("eksPodIdentityAddon", {
+    addonName: "eks-pod-identity-agent",
+    clusterName: cluster.name,
+    addonVersion: "v1.3.0-eksbuild.1",
+});
+
+const vpcCniAddon = new aws.eks.Addon("vpcCniAddon", {
+    addonName: "vpc-cni",
+    clusterName: cluster.name,
+    addonVersion: "v1.18.1-eksbuild.3",
+});
+
+const coreDnsAddon = new aws.eks.Addon("coreDns", {
+    addonName: "coredns",
+    clusterName: cluster.name,
+    addonVersion: "v1.11.1-eksbuild.8", 
+    resolveConflictsOnCreate: "OVERWRITE",
+    resolveConflictsOnUpdate: "OVERWRITE",
+    configurationValues: JSON.stringify({"autoScaling": {"enabled": true, "minReplicas": 2, "maxReplicas": 10 } }),
+});
+
+const podIdentityRole = new aws.iam.Role("podIdentityRole", {
+    assumeRolePolicy: JSON.stringify({
+        Version: "2012-10-17",
+        Statement: [
+            {
+                Principal: {
+                    Service: "pods.eks.amazonaws.com",
+                },
+                Effect: "Allow",
+                Action: ["sts:AssumeRole", "sts:TagSession"],
+            },
+        ],
+    }),
+});
