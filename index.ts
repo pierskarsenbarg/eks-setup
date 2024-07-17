@@ -83,3 +83,30 @@ const cluster = new aws.eks.Cluster("eks-from-scratch", {
     },
     version: "1.30",
 });
+
+const nodeGroupRole = new aws.iam.Role("nodeRole", {
+    assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal(
+        aws.iam.Principals.Ec2Principal
+    ),
+    managedPolicyArns: [
+        aws.iam.ManagedPolicy.AmazonEKS_CNI_Policy,
+        aws.iam.ManagedPolicy.AmazonEC2ContainerRegistryReadOnly,
+        aws.iam.ManagedPolicy.AmazonEKSWorkerNodePolicy,
+        aws.iam.ManagedPolicy.AmazonSSMManagedInstanceCore,
+    ],
+});
+
+const nodeGroupv130 = new aws.eks.NodeGroup("nodeGroup-v130", {
+    clusterName: cluster.name,
+    nodeRoleArn: nodeGroupRole.arn,
+    subnetIds: pulumi.output(allSubnetIds),
+    scalingConfig: {
+        desiredSize: 3,
+        maxSize: 10,
+        minSize: 3,
+    },
+    version: "1.30",
+    labels: {
+        version: "v1.30",
+    },
+});
