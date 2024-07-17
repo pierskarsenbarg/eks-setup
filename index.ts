@@ -158,3 +158,72 @@ const oidcProvider = new aws.iam.OpenIdConnectProvider("eksOidcProvider", {
     thumbprintLists: [certs.certificates[0].sha1Fingerprint],
     url: cluster.identities[0].oidcs[0].issuer,
 });
+
+const getKubeconfig = (
+    endpoint: pulumi.Output<string>,
+    certData: pulumi.Output<string>,
+    clusterName: pulumi.Output<string>
+): pulumi.Output<string> => {
+    return pulumi
+        .all([endpoint, certData, clusterName])
+        .apply(([endpoint, certData, clusterName]) => {
+            return pulumi.jsonStringify({
+                apiVersion: "v1",
+                clusters: [
+                    {
+                        cluster: {
+                            "certificate-authority-data": certData,
+                            server: endpoint,
+                        },
+                        name: clusterName,
+                    },
+                ],
+                contexts: [
+                    {
+                        context: {
+                            cluster: clusterName,
+                            user: "aws-user",
+                        },
+                        name: "eks-from-scratch",
+                    },
+                ],
+                "current-context": "eks-from-scratch",
+                kind: "Config",
+                preferences: {},
+                users: [
+                    {
+                        name: "aws-user",
+                        user: {
+                            exec: {
+                                apiVersion:
+                                    "client.authentication.k8s.io/v1beta1",
+                                args: [
+                                    "--region",
+                                    "eu-west-1",
+                                    "eks",
+                                    "get-token",
+                                    "--cluster-name",
+                                    clusterName,
+                                    "--output",
+                                    "json",
+                                ],
+                                command: "aws",
+                            },
+                        },
+                    },
+                ],
+            });
+        });
+};
+
+export const kubeconfig = pulumi.secret(
+    getKubeconfig(
+        cluster.endpoint,
+        cluster.certificateAuthority.data,
+        cluster.name
+    )
+);
+
+const k8sprovider = new k8s.Provider("k8sProvider", {
+    kubeconfig: kubeconfig,
+}, { dependsOn: cluster });
