@@ -3,12 +3,16 @@ import * as aws from "@pulumi/aws";
 import * as tls from "@pulumi/tls";
 import * as k8s from "@pulumi/kubernetes";
 
-const ownerTag = "piers";
+const stackName = pulumi.getStack()
+
+let ownerTag = "piers";
+
+if (stackName !== "dev") {
+    ownerTag = `piers-${stackName}`;
+}
 
 const stackConfig = new pulumi.Config();
 const region: aws.Region = stackConfig.require("awsRegion");
-
-const stackName = pulumi.getStack()
 
 const clusterName = `eks-from-scratch-${ownerTag}`;
 
