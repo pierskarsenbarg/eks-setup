@@ -2,8 +2,9 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import * as tls from "@pulumi/tls";
 import * as k8s from "@pulumi/kubernetes";
+import { readFileSync } from "fs";
 
-const stackName = pulumi.getStack()
+export const stackName = pulumi.getStack()
 
 let ownerTag = "piers";
 
@@ -626,3 +627,6 @@ const helloWorldIngress = new k8s.networking.v1.Ingress(
 
 export const helloworldurl =
     pulumi.interpolate`http://${helloWorldIngress.status.loadBalancer.ingress[0].hostname}`;
+
+// add readme to stack outputs. must be named "readme".
+export const readme = readFileSync("./Pulumi.readme.md").toString();
