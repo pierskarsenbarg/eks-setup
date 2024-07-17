@@ -17,6 +17,8 @@ const awsProvider = new aws.Provider("provider", {
             owner: ownerTag,
         },
     },
+}, {
+    aliases: ["urn:pulumi:dev::aws-training-module-02-cluster::pulumi:providers:aws::default_6_32_0"]
 });
 
 pulumi.runtime.registerStackTransformation((args) => {
