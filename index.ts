@@ -625,4 +625,4 @@ const helloWorldIngress = new k8s.networking.v1.Ingress(
 );
 
 export const helloworldurl =
-    helloWorldIngress.status.loadBalancer.ingress[0].hostname;
+    pulumi.interpolate`http://${helloWorldIngress.status.loadBalancer.ingress[0].hostname}`;
