@@ -528,3 +528,100 @@ const podIdentityAssociation = new aws.eks.PodIdentityAssociation("podIdentityAs
     roleArn: podIdentityRole.arn,
     namespace: namespace.metadata.name,
 });
+
+
+const appLabel = { app: "hello-world" };
+
+const helloWorldDeployment = new k8s.apps.v1.Deployment(
+    "hello-world",
+    {
+        metadata: {
+            namespace: namespace.metadata.name,
+        },
+        spec: {
+            replicas: 2,
+            selector: {
+                matchLabels: appLabel,
+            },
+            template: {
+                metadata: { labels: appLabel },
+                spec: {
+                    serviceAccountName: serviceAccount.metadata.name,
+                    nodeSelector: {
+                        version: "v1.30",
+                    },
+                    containers: [
+                        {
+                            name: "helloworld",
+                            image: "pierskarsenbarg/hello-world-app",
+                        },
+                    ],
+                },
+            },
+        },
+    },
+    { dependsOn: [podIdentityAssociation], provider: k8sprovider }
+);
+
+const helloWorldService = new k8s.core.v1.Service(
+    "hello-world-service",
+    {
+        metadata: {
+            namespace: namespace.metadata.name,
+        },
+        spec: {
+            selector: appLabel,
+            ports: [
+                {
+                    port: 8080,
+                    targetPort: 8080,
+                    name: "http-port",
+                },
+            ],
+        },
+    },
+    { dependsOn: [helloWorldDeployment, albHelm], provider: k8sprovider }
+);
+
+const helloWorldIngress = new k8s.networking.v1.Ingress(
+    "hello-world-ingress",
+    {
+        metadata: {
+            namespace: namespace.metadata.name,
+            annotations: {
+                "kubernetes.io/ingress.class": "alb",
+                "alb.ingress.kubernetes.io/target-type": "ip",
+                "alb.ingress.kubernetes.io/scheme": "internet-facing",
+                "alb.ingress.kubernetes.io/tags": "Owner=piers",
+                "alb.ingress.kubernetes.io/listen-ports": '[{"HTTP": 80}]',
+            },
+        },
+        spec: {
+            rules: [
+                {
+                    http: {
+                        paths: [
+                            {
+                                path: "/",
+                                pathType: "Prefix",
+                                backend: {
+                                    service: {
+                                        name: helloWorldService.metadata.name,
+                                        port: {
+                                            name: helloWorldService.spec
+                                                .ports[0].name,
+                                        },
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    },
+    { dependsOn: [albHelm], provider: k8sprovider }
+);
+
+export const helloworldurl =
+    helloWorldIngress.status.loadBalancer.ingress[0].hostname;
