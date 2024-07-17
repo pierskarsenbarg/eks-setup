@@ -555,7 +555,7 @@ const helloWorldDeployment = new k8s.apps.v1.Deployment(
                     containers: [
                         {
                             name: "helloworld",
-                            image: "pierskarsenbarg/hello-world-app",
+                            image: "pierskarsenbarg/hello-world-app@sha256:d9d23196965113989a59f3cc44ebf999f2082db4dd405d215902ddd14ec0d9d0",
                         },
                     ],
                 },
