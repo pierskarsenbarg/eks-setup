@@ -1,0 +1,2 @@
+config:
+  aws-training-module-02-cluster:awsRegion: eu-west-1

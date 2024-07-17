@@ -133,9 +133,6 @@ const coreDnsAddon = new aws.eks.Addon("coreDns", {
     addonName: "coredns",
     clusterName: cluster.name,
     addonVersion: "v1.11.1-eksbuild.9", 
-    resolveConflictsOnCreate: "OVERWRITE",
-    resolveConflictsOnUpdate: "OVERWRITE",
-    configurationValues: JSON.stringify({"autoScaling": {"enabled": true, "minReplicas": 2, "maxReplicas": 10 } }),
 });
 
 const podIdentityRole = new aws.iam.Role("podIdentityRole", {
