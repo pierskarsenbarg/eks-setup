@@ -509,3 +509,22 @@ const albHelm = new k8s.helm.v3.Release(
     },
     { dependsOn: [albPodIdentityAssociation], provider: k8sprovider }
 );
+
+const namespace = new k8s.core.v1.Namespace("pk", {
+    metadata: {
+        name: "pk",
+    },
+}, { provider: k8sprovider });
+
+const serviceAccount = new k8s.core.v1.ServiceAccount("podserviceaccount", {
+    metadata: {
+        namespace: namespace.metadata.name,
+    },
+}, { provider: k8sprovider });
+
+const podIdentityAssociation = new aws.eks.PodIdentityAssociation("podIdentityAssociation", {
+    clusterName: cluster.name,
+    serviceAccount: serviceAccount.metadata.name,
+    roleArn: podIdentityRole.arn,
+    namespace: namespace.metadata.name,
+});
