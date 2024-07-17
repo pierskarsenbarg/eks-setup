@@ -17,4 +17,24 @@ const controlPlaneSg = new aws.ec2.SecurityGroup("controlPlaneSg", {
     vpcId: vpcId,
 });
 
+const eksClusterRole = new aws.iam.Role("eksClusterRole", {
+    assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal(
+        aws.iam.Principals.EksPrincipal
+    ),
+});
 
+const eksClusterPolicyAttachment = new aws.iam.RolePolicyAttachment(
+    "eksClusterPolicyAttachment",
+    {
+        role: eksClusterRole,
+        policyArn: aws.iam.ManagedPolicy.AmazonEKSClusterPolicy,
+    }
+);
+
+const kmsKey = new aws.kms.Key("clusterKey");
+
+const allSubnetIds = pulumi
+    .all([publicSubnetIds, privateSubnetIds])
+    .apply(([publicSubnetIds, privateSubnets]) => {
+        return publicSubnetIds.concat(privateSubnets);
+    });
