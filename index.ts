@@ -129,11 +129,11 @@ const vpcCniAddon = new aws.eks.Addon("vpcCniAddon", {
     addonVersion: "v1.18.1-eksbuild.3",
 });
 
-// const coreDnsAddon = new aws.eks.Addon("coreDns", {
-//     addonName: "coredns",
-//     clusterName: cluster.name,
-//     addonVersion: "v1.11.1-eksbuild.9", 
-// });
+const coreDnsAddon = new aws.eks.Addon("coreDns", {
+    addonName: "coredns",
+    clusterName: cluster.name,
+    addonVersion: "v1.11.1-eksbuild.9", 
+});
 
 const podIdentityRole = new aws.iam.Role("podIdentityRole", {
     assumeRolePolicy: JSON.stringify({
