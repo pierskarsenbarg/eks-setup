@@ -61,3 +61,25 @@ const allSubnetIds = pulumi
     .apply(([publicSubnetIds, privateSubnets]) => {
         return publicSubnetIds.concat(privateSubnets);
     });
+
+const cluster = new aws.eks.Cluster("eks-from-scratch", {
+    name: clusterName,
+    roleArn: eksClusterRole.arn,
+    vpcConfig: {
+        subnetIds: pulumi.output(allSubnetIds),
+        endpointPublicAccess: true,
+        endpointPrivateAccess: true,
+        securityGroupIds: [controlPlaneSg.id],
+    },
+    encryptionConfig: {
+        provider: {
+            keyArn: kmsKey.arn,
+        },
+        resources: ["secrets"],
+    },
+    accessConfig: {
+        authenticationMode: "API",
+        bootstrapClusterCreatorAdminPermissions: true
+    },
+    version: "1.30",
+});
