@@ -488,3 +488,24 @@ const albPodIdentityAssociation = new aws.eks.PodIdentityAssociation(
         namespace: "kube-system",
     }
 );
+
+const albHelm = new k8s.helm.v3.Release(
+    "albhelm",
+    {
+        repositoryOpts: {
+            repo: "https://aws.github.io/eks-charts",
+        },
+        chart: "aws-load-balancer-controller",
+        namespace: "kube-system",
+        values: {
+            clusterName: cluster.name,
+            serviceAccount: {
+                create: false,
+                name: "aws-load-balancer-controller",
+            },
+            region: "eu-west-1",
+            vpcId: vpcId,
+        },
+    },
+    { dependsOn: [albPodIdentityAssociation], provider: k8sprovider }
+);
