@@ -3,10 +3,31 @@ import * as aws from "@pulumi/aws";
 
 const ownerTag = "piers";
 
-const awsConfig = new pulumi.Config("aws");
-const region: aws.Region = "eu-west-1";
+const stackConfig = new pulumi.Config();
+const region: aws.Region = stackConfig.require("awsRegion");
 
 const stackName = pulumi.getStack()
+
+const clusterName = `eks-from-scratch-${ownerTag}`;
+
+const awsProvider = new aws.Provider("provider", {
+    region: region,
+    defaultTags: {
+        tags: {
+            owner: ownerTag,
+        },
+    },
+});
+
+pulumi.runtime.registerStackTransformation((args) => {
+    if (args.type.startsWith("aws")) {
+        return {
+            props: args.props,
+            opts: pulumi.mergeOptions(args.opts, { provider: awsProvider }),
+        };
+    }
+    return undefined;
+});
 
 const networkingStackReference = new pulumi.StackReference(`stark-tech/aws-training-module-02-networking/${stackName}`);
 const vpcId = networkingStackReference.getOutput("vpcId");
