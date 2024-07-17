@@ -19,3 +19,7 @@ This will deploy the following:
 1. Set AWS region: `pulumi config set aws:{region}`
 1. Set the AWS IAM role that you want to use to authenticate with the cluster once it's set up: `pulumi config set accessRole {role arn}`
 1. Set the name for the `ownerTag` tag that we set (because we are responsible)
+
+## Destroy
+
+Don't forget to tear it down at the end.
