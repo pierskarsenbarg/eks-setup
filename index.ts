@@ -582,3 +582,46 @@ const helloWorldService = new k8s.core.v1.Service(
     },
     { dependsOn: [helloWorldDeployment, albHelm], provider: k8sprovider }
 );
+
+const helloWorldIngress = new k8s.networking.v1.Ingress(
+    "hello-world-ingress",
+    {
+        metadata: {
+            namespace: namespace.metadata.name,
+            annotations: {
+                "kubernetes.io/ingress.class": "alb",
+                "alb.ingress.kubernetes.io/target-type": "ip",
+                "alb.ingress.kubernetes.io/scheme": "internet-facing",
+                "alb.ingress.kubernetes.io/tags": "Owner=piers",
+                "alb.ingress.kubernetes.io/listen-ports": '[{"HTTP": 80}]',
+            },
+        },
+        spec: {
+            rules: [
+                {
+                    http: {
+                        paths: [
+                            {
+                                path: "/",
+                                pathType: "Prefix",
+                                backend: {
+                                    service: {
+                                        name: helloWorldService.metadata.name,
+                                        port: {
+                                            name: helloWorldService.spec
+                                                .ports[0].name,
+                                        },
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    },
+    { dependsOn: [albHelm], provider: k8sprovider }
+);
+
+export const helloworldurl =
+    helloWorldIngress.status.loadBalancer.ingress[0].hostname;
