@@ -1,5 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
+import * as tls from "@pulumi/tls";
+import * as k8s from "@pulumi/kubernetes";
 
 const ownerTag = "piers";
 
@@ -145,4 +147,14 @@ const podIdentityRole = new aws.iam.Role("podIdentityRole", {
             },
         ],
     }),
+});
+
+const certs = tls.getCertificateOutput({
+    url: cluster.identities[0].oidcs[0].issuer,
+});
+
+const oidcProvider = new aws.iam.OpenIdConnectProvider("eksOidcProvider", {
+    clientIdLists: ["sts.amazonaws.com"],
+    thumbprintLists: [certs.certificates[0].sha1Fingerprint],
+    url: cluster.identities[0].oidcs[0].issuer,
 });
